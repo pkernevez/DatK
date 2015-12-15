@@ -1,21 +1,31 @@
 package dojo;
 
+import java.util.Arrays;
+import java.util.List;
+
+import exception.InvalidCardException;
+
 public class Card implements Comparable<Card> {
 
 	private String level;
 	private String color;
-	
-	public Card(String string) {
-		level =  string.split("-")[0];
+	private static List<String> validLevels = Arrays.asList("A", "2", "3", "4",
+			"5", "6", "7", "8", "9", "10", "J", "K", "Q");
+	private static List<String> validColors = Arrays.asList("H", "D", "C", "S");
+
+	public Card(String string) throws InvalidCardException {
+		level = string.split("-")[0];
 		color = string.split("-")[1];
+		if (!(validLevels.contains(level) && validColors.contains(color))) {
+			throw new InvalidCardException();
+		}
+		;
 	}
 
-	public String getLevel(){
+	public String getLevel() {
 		return level;
 	}
-	
-	
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -47,7 +57,7 @@ public class Card implements Comparable<Card> {
 		return true;
 	}
 
-	public int getStrength(){
+	public int getStrength() {
 		int result;
 		switch (level) {
 		case "A":
@@ -67,17 +77,14 @@ public class Card implements Comparable<Card> {
 		}
 		return result;
 	}
-	
-	public String getColor(){
+
+	public String getColor() {
 		return color;
 	}
 
 	public int compareTo(Card o) {
-//		if(o.level.equals(level))
-//			return 0;
-//		else if(o.level.equals(level))
-//		; 
-		return 0;
+		return this.getStrength() - o.getStrength();
+
 	}
-	
+
 }
