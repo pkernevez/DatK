@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Build-Number: 1
+Implementation-Title: com.dojo
+Git-Commit: 54g65g46fgg4f5g465g4s65g4sd65
+Implementation-Version: 1.0-SNAPSHOT
+Implementation-Vendor-Id: com.dojo
+Job-Name: origin/master
+Build-Jdk: 1.8.0_65
+Built-By: jenkins
+Git-Branch: origin/master
+Created-By: Apache Maven 3.1.1
+BuildDate: 2016-01-08 17:26
+Main-Class: com.dojo.Main
+Archiver-Version: Plexus Archiver

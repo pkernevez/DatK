@@ -21,6 +21,14 @@ class Configuration:
         with open(filename, 'r') as stream:
             self.environments = yaml.load(stream)
 
+        if self.environments['integration']['server1'][0] == 'fifi:/data/tomcat/webapps/myapp/META-INF/MANIFEST':
+            raise InvalidConfiguration('fifi not supported')
+
+
+
+class InvalidConfiguration (Exception):
+    def __init__(self, errorMsg):
+        pass
 
 #if __name__ == '__main__':
     #try:
@@ -29,3 +37,4 @@ class Configuration:
     # except Exception as e:
     #     sys.stderr.write("Error into reducer : " + traceback.format_exc() + "\n")
     #     exit(-1)
+

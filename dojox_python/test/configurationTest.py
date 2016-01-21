@@ -8,7 +8,7 @@ import logging
 from  os.path import dirname
 from datetime import date
 
-from configuration import Configuration
+from configuration import *
 
 sys.path.insert(0, os.path.join(dirname(__file__), "../src"))
 sys.path.insert(0, "../src")
@@ -24,6 +24,19 @@ class TestConfiguration(unittest.TestCase):
         configuration = Configuration('config.yml')
         self.assertEquals( 'config.yml', configuration.filename )
         self.assertIsNotNone(configuration.environments)
+
+    def test_loadIntegration(self):
+        configuration = Configuration('config.yml')
+        self.assertIsNotNone(configuration.environments['integration'])
+        self.assertEquals("file:/data/tomcat/webapps/myapp/META-INF/MANIFEST", configuration.environments['integration']['server1'][0])
+
+
+    def test_bad_protocol(self):
+        try:
+            configuration = Configuration('bad_config.yml')
+            self.fail()
+        except InvalidConfiguration as e:
+            self.assertTrue("fifi not supported" in e.__str__())
 
     def test_invalidConfiguration(self):
         try:
