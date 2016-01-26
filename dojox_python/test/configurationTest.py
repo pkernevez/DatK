@@ -36,7 +36,7 @@ class TestConfiguration(unittest.TestCase):
             configuration = Configuration('bad_config.yml')
             self.fail()
         except InvalidConfiguration as e:
-            self.assertTrue("fifi not supported" in e.__str__())
+            self.assertTrue("not supported" in e.__str__())
 
     def test_invalidConfiguration(self):
         try:
@@ -46,7 +46,32 @@ class TestConfiguration(unittest.TestCase):
         except FileNotFoundError as e:
             self.assertTrue("No such file" in e.__str__())
 
+    def test_parseManifest(self):
+        manifest = Manifest("MANIFEST.MF")
+        manifestContent = manifest.parse()
+        self.assertIsNotNone(manifestContent)
+        self.assertEqual('origin/master', manifestContent['Job-Name'])
 
+    def test_file_connector(self):
+        connector = Connector('file')
+        connector.connect('file:/blah/blah')
+
+
+
+    def test_registering_of_connector(self):
+        mgr = ConnectorManager()
+        mgr.register( MockConnector('jar', 'Job-Name: origin/master') )
+        self.assertEqual(1, len( mgr.connectors))
+
+
+
+class MockConnector (Connector):
+    def __init__(self, protocol, data):
+        super(MockConnector, self).__init__(protocol)
+        self.data = data
+
+    def connect(self, url):
+        return self.data
 
 if __name__ == '__main__':
     unittest.main()
