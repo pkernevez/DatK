@@ -1,7 +1,7 @@
 integration :
     server3:
-        - jar:/data/tomcat/webapps/myapp/META-INF/MANIFEST
-        - fifi:/data/tomcat/webapps/myapp/META-INF/MANIFEST
+        app1: jar:/data/tomcat/webapps/myapp/META-INF/MANIFEST
+        app2: fifi:/data/tomcat/webapps/myapp/META-INF/MANIFEST
     server2:
-        - jar:/data/
+        app1: jar:/data/
 

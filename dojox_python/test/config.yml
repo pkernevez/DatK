@@ -1,12 +1,12 @@
 integration :
     server1:
-        - file:/data/tomcat/webapps/myapp/META-INF/MANIFEST
-        - file:/data/tomcat/webapps/myapp2/META-INF/MANIFEST
+        app1: file:/data/tomcat/webapps/myapp/META-INF/MANIFEST
+        app2: file:/data/tomcat/webapps/myapp2/META-INF/MANIFEST
     server2 :
-        - jar:/data/appli2/programme.jar#META-INF/MANIFEST
+        app3: jar:/data/appli2/programme.jar#META-INF/MANIFEST
 production :
     server4:
-        - file:/data/tomcat/webapps/myap6/META-INF/MANIFEST
-        - file:/data/tomcat/webapps/myapp7/META-INF/MANIFEST
+        app1: file:/data/tomcat/webapps/myap6/META-INF/MANIFEST
+        app2: file:/data/tomcat/webapps/myapp7/META-INF/MANIFEST
     server5 :
-        - jar:/data/appli6/programme.jar#META-INF/MANIFEST
+        app3: jar:/data/appli6/programme.jar#META-INF/MANIFEST

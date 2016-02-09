@@ -21,8 +21,8 @@ class Configuration:
             self.environments = yaml.load(stream)
 
         for env, servers in self.environments.items():
-            for server, urls in servers.items():
-                for url in urls:
+            for server, components in servers.items():
+                for (key,url) in components.items():
                     protocol = Configuration.protocol(url)
                     if protocol not in ['jar', 'file']:
                         raise InvalidConfiguration(protocol + ' not supported')
@@ -30,6 +30,25 @@ class Configuration:
     def protocol(url):
         return re.search('^(.*):', url).group(1)
 
+class EnvCrawler:
+    def __init__(self, conf, connectorManager):
+        self.connMgr = connectorManager
+        self.envDescr = self.__crawl(conf)
+
+    def __crawl(self, conf):
+        for env, servers in conf.items():
+            self.__crawlEnv(env, servers)
+
+    def __crawlEnv(self, env, servers):
+        for server, components in servers.items():
+            self.__crawlServer(server, components)
+
+    def __crawlServer(self, server, components):
+        for (key,url) in components.items():
+            self.__crawlComponent(url)
+
+    def __crawlComponent(self, url):
+        pass
 
 class InvalidConfiguration(Exception):
     def __init__(self, errorMsg):
@@ -37,15 +56,15 @@ class InvalidConfiguration(Exception):
 
 
 class Manifest:
-
     def __init__(self, contentString):
         self.content = {}
         if contentString != '':
             lines = contentString.split("\n")
-            for line in lines:
-                vals = line.split(": ")
-                self.content[vals[0]] = vals[1].strip('\n\r')
-                #TODO fro compèrehnsion
+            self.content = dict([Manifest.__splitKeyValue(line) for line in lines])
+
+    def __splitKeyValue(keyvalue):
+        vals = keyvalue.split(": ")
+        return vals[0], vals[1].strip('\n\r')
 
 
 class Connector:
@@ -67,8 +86,7 @@ class ConnectorManager:
     def connect(self, url):
         protocol = Configuration.protocol(url)
         manifestContent = self.connectors[protocol].connect(url)
-
-        return manifestContent
+        return Manifest(manifestContent).content
 
         # if __name__ == '__main__':
         # try:
