@@ -6,7 +6,7 @@ import unittest
 from  os.path import dirname
 from unittest.mock import MagicMock
 
-from configuration import *
+from analyzer import *
 
 sys.path.insert(0, os.path.join(dirname(__file__), "../src"))
 sys.path.insert(0, "../src")
@@ -14,7 +14,7 @@ sys.path.insert(0, "../src")
 logging.basicConfig(level=logging.DEBUG)
 
 
-class TestConfiguration(unittest.TestCase):
+class TestAnalyzer(unittest.TestCase):
     # def setUp(self):
 
     def test_loadConfiguration(self):
@@ -27,6 +27,15 @@ class TestConfiguration(unittest.TestCase):
         self.assertIsNotNone(configuration.environments['integration'])
         self.assertEquals("file:/data/tomcat/webapps/myapp/META-INF/MANIFEST",
                           configuration.environments['integration']['server1']['app1'])
+
+    def test_getProtocol(self):
+        self.assertEqual('file', Configuration.protocol('file:server1:/data/tomcat/webapps/myapp/META-INF/MANIFEST'))
+
+    def test_getServer(self):
+        self.assertEqual('server1', Configuration.server('file:server1:/data/tomcat/webapps/myapp/META-INF/MANIFEST'))
+
+    def test_getLocation(self):
+        self.assertEqual('/data/tomcat/webapps/myapp/META-INF/MANIFEST', Configuration.location('file:server1:/data/tomcat/webapps/myapp/META-INF/MANIFEST'))
 
     def test_bad_protocol(self):
         try:
@@ -61,27 +70,30 @@ class TestConfiguration(unittest.TestCase):
 
     def test_file_connector(self):
         connector = Connector('file')
-        connector.connect('file:/blah/blah')
+        connector.connect('file:server:/blah/blah')
+
+    def __registerMock(self, mgr, protocol, data):
+        conn = MockConnector(protocol, data)
+        mgr.register(conn)
+        return self
 
     def test_registering_of_connector(self):
         mgr = ConnectorManager()
-        mgr.register(MockConnector('jar', 'Job-Name: origin/master'))
+        self.__registerMock(mgr, 'jar', 'Job-Name: origin/master')
         self.assertEqual(1, len(mgr.connectors))
 
     def test_managerConnectToAppropriateConnector(self):
         mgr = ConnectorManager()
-        jarConnector = MockConnector('jar', 'Job-Name: origin/master')
+        jarConnector = MockConnector('jar', '')
         jarConnector.connect = MagicMock(return_value="")
-        fileConnector = MockConnector('file', 'Job-Name: origin/master')
-        mgr.register(jarConnector).register(fileConnector)
-        mgr.connect("jar:/data/appli2/programme.jar#META-INF/MANIFEST")
-        jarConnector.connect.assert_called_with("jar:/data/appli2/programme.jar#META-INF/MANIFEST")
+        mgr.register(jarConnector)
+        self.__registerMock(mgr, 'file', 'Job-Name: origin/master')
+        mgr.connect("jar:server1:/data/appli2/programme.jar#META-INF/MANIFEST")
+        jarConnector.connect.assert_called_with("jar:server1:/data/appli2/programme.jar#META-INF/MANIFEST")
 
     def test_managerConnectorReturnsValidManifest(self):
         mgr = ConnectorManager()
-        jarConnector = MockConnector('jar', 'Job-Name: origin/master')
-        jarConnector.connect = MagicMock(return_value="BuildDate: 2016-01-08 17:26\nMain-Class: com.dojo.Main")
-        mgr.register(jarConnector)
+        self.__registerMock(mgr,'jar', 'BuildDate: 2016-01-08 17:26\nMain-Class: com.dojo.Main')
         manifest = mgr.connect("jar:/data/appli2/programme.jar#META-INF/MANIFEST")
         self.assertIsNotNone(manifest)
         self.assertEqual(2, len(manifest))
@@ -90,19 +102,46 @@ class TestConfiguration(unittest.TestCase):
     def test_envCrawler(self):
         configuration = Configuration('config.yml')
         mgr = ConnectorManager()
-        jarConnector = MockConnector('jar', 'Job-Name: origin/master')
-        jarConnector.connect = MagicMock(return_value="BuildDate: 2016-01-08 17:26\nMain-Class: com.dojo.Main")
-        mgr.register(jarConnector)
-        fileConnector = MockConnector('file', 'Job-Name: origin/master')
-        fileConnector.connect = MagicMock(return_value="BuildDate: 2016-01-14 17:26\nMain-Class: com.dojo.Nain")
-        mgr.register(fileConnector)
-        envDesc = EnvCrawler(configuration, mgr).envDescr
+        self.__registerMock(mgr, 'jar', 'BuildDate: 2016-01-08 17:26\nMain-Class: com.dojo.Main')
+        self.__registerMock(mgr, 'file', 'BuildDate: 2016-01-14 17:26\nMain-Class: com.dojo.Nain')
+        crawler = EnvCrawler( mgr)
+        crawler._EnvCrawler__crawl(configuration.environments)
+        envDesc = crawler.envDescr
         self.assertIsNotNone(envDesc)
         self.assertEqual(2, len(envDesc))
         self.assertIsNotNone(envDesc['integration'])
         self.assertEqual(2, len(envDesc['integration']))
         self.assertEqual(2, len(envDesc['integration']['server1']))
-        self.assertEqual({'BuildDate': '2016-01-14 17:26', 'Main-Class': 'com.dojo.Nain'}, envDesc['integration']['server1']['app2'])
+        self.assertEqual({'BuildDate': '2016-01-14 17:26', 'Main-Class': 'com.dojo.Nain'},
+                         envDesc['integration']['server1']['app2'])
+
+    def test_envStatusIsConvertedToJson(self):
+        envDesc = EnvCrawler()
+        envDesc.envDescr = {
+            'integration': {
+                'server1': {
+                    'app1': {
+                        'BuildDate': '2016-01-14 17:26'
+        }}}}
+        self.assertEqual('{"integration": {"server1": {"app1": {"BuildDate": "2016-01-14 17:26"}}}}', envDesc.envStatus())
+
+    def test_FileConnector(self):
+        conn = FileConnector()
+        self.assertEqual("cat '/tmp/happystore/META-INF/MANIFEST.MF'",
+                         conn.command('file:app:/tmp/happystore/META-INF/MANIFEST.MF'))
+
+    def test_ZipConnector(self):
+        conn = ZipConnector()
+        self.assertEqual("unzip -p '/tmp/webapps/happystore.war' META-INF/MANIFEST.MF",
+                         conn.command('zip:server:/tmp/webapps/happystore.war'))
+
+    def test_errorMsgWhenInvalidUrl(self):
+        conn = Connector('invalid')
+        try:
+            conn.connect("toto")
+            self.fail("Should not passed !")
+        except InvalidConfiguration as e:
+            self.assertEqual("The url 'toto' is not valid\nThe url should in the format : 'protocol:server:location'", e.__str__())
 
 class MockConnector(Connector):
     def __init__(self, protocol, data):
