@@ -99,8 +99,10 @@ class TestConfiguration(unittest.TestCase):
         envDesc = EnvCrawler(configuration, mgr).envDescr
         self.assertIsNotNone(envDesc)
         self.assertEqual(2, len(envDesc))
-        # self.assertEqual({{"BuildDate": "2016-01-14 17:26", "Main-Class": "com.dojo.Nain"}}, crawler)
-
+        self.assertIsNotNone(envDesc['integration'])
+        self.assertEqual(2, len(envDesc['integration']))
+        self.assertEqual(2, len(envDesc['integration']['server1']))
+        self.assertEqual({'BuildDate': '2016-01-14 17:26', 'Main-Class': 'com.dojo.Nain'}, envDesc['integration']['server1']['app2'])
 
 class MockConnector(Connector):
     def __init__(self, protocol, data):

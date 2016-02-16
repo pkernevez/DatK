@@ -36,19 +36,13 @@ class EnvCrawler:
         self.envDescr = self.__crawl(conf)
 
     def __crawl(self, conf):
-        for env, servers in conf.items():
-            self.__crawlEnv(env, servers)
+        return {env: self.__crawlEnv(servers) for env, servers in conf.environments.items()}
 
-    def __crawlEnv(self, env, servers):
-        for server, components in servers.items():
-            self.__crawlServer(server, components)
+    def __crawlEnv(self, servers):
+        return { server: self.__crawlServer( components ) for server, components in servers.items() }
 
-    def __crawlServer(self, server, components):
-        for (key,url) in components.items():
-            self.__crawlComponent(url)
-
-    def __crawlComponent(self, url):
-        pass
+    def __crawlServer(self, components):
+        return { component: self.connMgr.connect(url) for (component, url) in components.items() }
 
 class InvalidConfiguration(Exception):
     def __init__(self, errorMsg):
