@@ -14,3 +14,4 @@ Main-Class: com.dojo.Main
 Class-Path: lib/core-2.4.0.jar lib/mail-1.4.7.jar lib/activation-1.1.j
  ar lib/xstream-1.4.1.jar
 Archiver-Version: Plexus Archiver
+

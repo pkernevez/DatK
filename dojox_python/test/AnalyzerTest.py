@@ -3,13 +3,16 @@ __author__ = 'ks'
 
 import logging
 import unittest
+import sys, os
 from  os.path import dirname
 from unittest.mock import MagicMock
 
+sys.path.insert(0, os.path.join(dirname(__file__), ".."))
+sys.path.insert(1, ".")
 from analyzer import *
 
-sys.path.insert(0, os.path.join(dirname(__file__), "../src"))
-sys.path.insert(0, "../src")
+# sys.path.insert(0, os.path.join(dirname(__file__), "../src"))
+# sys.path.insert(0, "../src")
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -56,6 +59,10 @@ class TestAnalyzer(unittest.TestCase):
         manifest = Manifest("")
         self.assertEqual({}, manifest.content)
 
+    def test_parseManifestWithEmptyLines(self):
+        manifest = Manifest("\r\n\r\n")
+        self.assertEqual({}, manifest.content)
+
     def test_parseManifestWithOneCorrectLine(self):
         manifest = Manifest("Job-Name: origin/master")
         self.assertIsNotNone(manifest.content)
@@ -67,10 +74,6 @@ class TestAnalyzer(unittest.TestCase):
         self.assertEqual(2, manifest.content.__len__())
         self.assertEqual('origin/master', manifest.content['Job-Name'])
         self.assertEqual('2016-01-08 17:26', manifest.content['BuildDate'])
-
-    def test_file_connector(self):
-        connector = Connector('file')
-        connector.connect('file:server:/blah/blah')
 
     def __registerMock(self, mgr, protocol, data):
         conn = MockConnector(protocol, data)
@@ -125,15 +128,34 @@ class TestAnalyzer(unittest.TestCase):
         }}}}
         self.assertEqual('{"integration": {"server1": {"app1": {"BuildDate": "2016-01-14 17:26"}}}}', envDesc.envStatus())
 
+    def test_envStatusIsWriteToFile(self):
+        envCrawler = EnvCrawler()
+        envCrawler.envDescr = {
+            'integration': {
+                'server1': {
+                    'app1': {
+                        'BuildDate': '2016-01-14 17:26'
+        }}}}
+        output = 'result.json'
+        envCrawler._EnvCrawler__save(output)
+        with open(output, 'r') as outputfile:
+            self.assertEqual('{"integration": {"server1": {"app1": {"BuildDate": "2016-01-14 17:26"}}}}', outputfile.readline())
+        os.remove(output)
+
     def test_FileConnector(self):
         conn = FileConnector()
         self.assertEqual("cat '/tmp/happystore/META-INF/MANIFEST.MF'",
-                         conn.command('file:app:/tmp/happystore/META-INF/MANIFEST.MF'))
+                         conn.command('/tmp/happystore/META-INF/MANIFEST.MF'))
 
     def test_ZipConnector(self):
         conn = ZipConnector()
         self.assertEqual("unzip -p '/tmp/webapps/happystore.war' META-INF/MANIFEST.MF",
-                         conn.command('zip:server:/tmp/webapps/happystore.war'))
+                         conn.command('/tmp/webapps/happystore.war'))
+
+    # //TODO Ajouter jarConnector
+    # // TODO Method Main
+    # //TODO Gerer execute remote
+    # // Gerer manifest multiline
 
     def test_errorMsgWhenInvalidUrl(self):
         conn = Connector('invalid')
