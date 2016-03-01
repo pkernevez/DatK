@@ -32,7 +32,8 @@ class Configuration:
             for server, components in servers.items():
                 for (key,url) in components.items():
                     protocol = Configuration.protocol(url)
-                    if protocol not in ['jar', 'file']:
+                    if protocol not in ['jar', 'file', 'zip', 'os']:
+                        # TODO : utiliser la liste du connector manager
                         raise InvalidConfiguration(protocol + ' not supported')
         logging.info("Configuration loaded. Found {0} environnement(s)".format(len(self.environments.items())))
 
@@ -90,6 +91,7 @@ class Manifest:
             self.content = dict([Manifest.__splitKeyValue(line) for line in lines if len(line)>3])
 
     def __splitKeyValue(keyvalue):
+        print(keyvalue)
         vals = keyvalue.split(": ")
         return vals[0], vals[1].strip('\n\r')
 
@@ -137,12 +139,19 @@ class ZipConnector(Connector):
     def command(self, location):
         return "unzip -p '"+location+"' META-INF/MANIFEST.MF"
 
+class OsConnector(Connector):
+    def __init__(self):
+        super(OsConnector, self).__init__('os')
+
+    def command(self, location):
+        return "lsb_release -irc | sed -E 's/\t/\ /g'"
+
 class JarConnector(Connector):
     def __init__(self):
         super(JarConnector, self).__init__('jar')
 
-    def connect(self, location):
-        pass
+    def command(self, location):
+        return "cd /tmp;jar -xf '" + location +"' META-INF/MANIFEST.MF;cat /tmp/META-INF/MANIFEST.MF;rm -rf /tmp/META-INF"
 
 
 class ConnectorManager:
@@ -166,11 +175,12 @@ if __name__ == '__main__':
         logging.error("Usage : analyzer.py config.yaml result.json")
         exit(-2)
     try:
-        conf = Configuration(sys.argv[1])
         mgr = ConnectorManager()
         mgr.register(FileConnector())
         mgr.register(JarConnector())
         mgr.register(ZipConnector())
+        mgr.register(OsConnector())
+        conf = Configuration(sys.argv[1])
         EnvCrawler(mgr).crawl(conf, sys.argv[2])
     except Exception as e:
         sys.stderr.write("Error when collecting informations : " + traceback.format_exc() + "\n")

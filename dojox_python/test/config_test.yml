@@ -1,0 +1,8 @@
+integration :
+    test_file_server:
+        app1: file:app:/opt/tomcat/instances/happystore/webapps/happystore/META-INF/MANIFEST.MF
+        os: os:app:none
+    test_war_with_zip_server:
+        war: zip:app:/opt/tomcat/instances/happystore/webapps/happystore.war
+    test_war_with_jar_server:
+        jar: jar:app:/opt/tomcat/instances/happystore/webapps/happystore.war

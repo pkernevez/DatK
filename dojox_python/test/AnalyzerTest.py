@@ -153,8 +153,6 @@ class TestAnalyzer(unittest.TestCase):
                          conn.command('/tmp/webapps/happystore.war'))
 
     # //TODO Ajouter jarConnector
-    # // TODO Method Main
-    # //TODO Gerer execute remote
     # // Gerer manifest multiline
 
     def test_errorMsgWhenInvalidUrl(self):
@@ -176,4 +174,3 @@ class MockConnector(Connector):
 
 if __name__ == '__main__':
     unittest.main()
-    # jar : unzip -p jdiff.jar META-INF/MANIFEST.MF
