@@ -1,1 +1,15 @@
 <p>This is the partial for view 1.</p>
+
+<div class="row" ng-repeat="(envName, env) in manifest">
+    <h1>{{envName}}</h1>
+    <div class="alert alert-success .col-xs-6 .col-md-4" ng-repeat="(srvName, srv) in env">
+        <h2>{{srvName}}</h2>
+        <div ng-repeat="(cptName, cpt) in srv">
+            <h3>{{cptName}}</h3>
+            <ul data-ng-repeat="(name, value) in cpt">
+                <li>{{name}}: {{value}}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
