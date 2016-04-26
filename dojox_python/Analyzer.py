@@ -144,7 +144,7 @@ class OsConnector(Connector):
         super(OsConnector, self).__init__('os')
 
     def command(self, location):
-        return "lsb_release -irc | sed -E 's/\t/\ /g'"
+        return "lsb_release -ircd | sed -E 's/\t/\ /g'"
 
 class JarConnector(Connector):
     def __init__(self):
