@@ -19,12 +19,59 @@ def traces(msgs):
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
 
+class Direction:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return self.name
+    def __repr__(self):
+        return self.__str__()
+
+UP=Direction("UP")
+DOWN=Direction("DOWN")
+LEFT=Direction("LEFT")
+RIGHT=Direction("RIGHT")
+ALL = {UP, DOWN, RIGHT, LEFT}
+
 class Grid:
     def __init__(self):
         self.grid = [ [0 for y in range(20)] for x in range(30)]
 
     def move(self,x,y):
         self.grid[x][y] = 1
+
+    def free(self, x, y):
+        directions = {UP,DOWN,RIGHT,LEFT}
+        if x <= 0 or self.grid[x-1][y]:
+            directions.remove(LEFT)
+            trace("REMOVE LEFT")
+        if x >= 29 or self.grid[x+1][y]:
+            directions.remove(RIGHT)
+            trace("REMOVE RIGHT")
+        if y <= 0 or self.grid[x][y-1]:
+            directions.remove(UP)
+            trace("REMOVE UP")
+        if y >= 19 or self.grid[x][y+1]:
+            directions.remove(DOWN)
+            trace("REMOVE DOWN")
+
+        trace("Avalaible directions : "+str(directions))
+        return directions
+
+
+    def countFreeCells(self, x, y, dir):
+        cellCount=0
+        if dir == RIGHT:
+            while self.isFree(x+1, y):
+                cellCount+=1
+                x+=1
+        return cellCount
+
+
+    def isFree(self,x,y):
+        return x<30 and self.grid[x][y]==0
+
 
 if __name__ == '__main__':
     positionUsed = Grid()
@@ -42,13 +89,15 @@ if __name__ == '__main__':
 
             positionUsed.move(x0,y0)
             positionUsed.move(x1,y1)
-
+            if (i == p):
+                ourX = x1
+                ourY = y1
         # Write an action using print
         # To debug: print("Debug messages...", file=sys.stderr)
 
         # A single line with UP, DOWN, LEFT or RIGHT
-        print("LEFT")
-        print("UP")
+        print(str(positionUsed.free(ourX,ourY).pop()))
+        # print("UP")
 
 
 
